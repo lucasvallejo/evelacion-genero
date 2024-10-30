@@ -1,0 +1,419 @@
+<html>
+							<head>
+<title>Revelación del Género - ¡Una Aventura Emocionante!</title>
+<style>
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+.container {
+  width: 90%;
+  max-width: 800px;
+  background: white;
+  padding: 2rem;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  text-align: center;
+}
+
+.screen {
+  display: none;
+  animation: fadeIn 0.5s ease-in;
+}
+
+.active {
+  display: block;
+}
+
+button {
+  background: linear-gradient(45deg, #FF69B4, #FFB6C1);
+  border: none;
+  padding: 1rem 2rem;
+  color: white;
+  font-size: 1.2rem;
+  border-radius: 50px;
+  cursor: pointer;
+  margin: 1rem;
+  transition: transform 0.2s;
+}
+
+button:hover {
+  transform: scale(1.05);
+}
+
+.puzzle-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  max-width: 300px;
+  margin: 2rem auto;
+}
+
+.puzzle-tile {
+  aspect-ratio: 1;
+  background-size: 300px 300px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.sequence {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin: 2rem 0;
+}
+
+.sequence-btn {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+}
+
+.countdown {
+  font-size: 5rem;
+  font-weight: bold;
+  color: #FF69B4;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes heartbeat {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+.confetti {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  animation: fall 3s linear forwards;
+}
+
+@keyframes fall {
+  to {
+    transform: translateY(100vh) rotate(360deg);
+  }
+}
+
+.reveal-text {
+  font-size: 4rem;
+  font-weight: bold;
+  background: linear-gradient(45deg, #4FA7FF, #87CEEB);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: heartbeat 1s infinite;
+}
+
+.question-container {
+  margin: 2rem 0;
+}
+
+.final-name {
+  color: #4FA7FF;
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 3rem;
+  margin-top: 1rem;
+  animation: heartbeat 1s infinite;
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <!-- Pantalla de Inicio -->
+  <div class="screen active" id="welcome">
+    <h1>¡Bienvenidos a la Gran Revelación!</h1>
+    <p>¿Están listos para descubrir si será niño o niña?</p>
+    <p>Pero primero... ¡deberán superar algunos desafíos!</p>
+    <button onclick="startGame()">¡Comenzar la Aventura!</button>
+  </div>
+
+  <!-- Primer Desafío: Rompecabezas -->
+  <div class="screen" id="puzzle">
+    <h2>Desafío 1: Completa el Rompecabezas</h2>
+    <div class="puzzle-grid" id="puzzleGrid"></div>
+  </div>
+
+  <!-- Segundo Desafío: Secuencia de Colores -->
+  <div class="screen" id="sequence">
+    <h2>Desafío 2: Repite la Secuencia</h2>
+    <div class="sequence" id="sequenceContainer"></div>
+    <button onclick="playSequence()" id="playSequenceBtn">Ver Secuencia</button>
+    <div id="playerSequence" class="sequence"></div>
+  </div>
+
+  <!-- Tercer Desafío: Click Preciso -->
+  <div class="screen" id="timing">
+    <h2>Desafío 3: ¡Click en el Momento Exacto!</h2>
+    <div class="countdown" id="timingCounter">3.00</div>
+    <button onclick="checkTiming()" id="timingButton">¡AHORA!</button>
+  </div>
+
+  <!-- Cuenta Regresiva Final -->
+  <div class="screen" id="finalCountdown">
+    <h2>¡Prepárense para la Gran Revelación!</h2>
+    <div class="countdown" id="finalCounter">10</div>
+  </div>
+
+  <!-- Pantalla de Preguntas -->
+  <div class="screen" id="questions">
+    <h2>Bueno, está bien... ahora vas a saber aunque no lo lograste, pero antes responde lo siguiente:</h2>
+    <div class="question-container" id="questionContainer">
+      <!-- Questions will be inserted here -->
+    </div>
+  </div>
+
+  <!-- Modificar la pantalla de revelación -->
+  <div class="screen" id="reveal">
+    <div class="reveal-text" id="genderReveal">¡ES NIÑO! 👶</div>
+    <div class="final-name">¡BAUTISTA!</div>
+  </div>
+</div>
+
+<script>
+const gender = Math.random() < 0.5 ? "¡ES NIÑA! 👶🎀" : "¡ES NIÑO! 👶🌟";
+let currentScreen = "welcome";
+const audio = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-tribal-dry-drum-558.mp3');
+
+
+
+
+function startGame() {
+  showScreen('puzzle');
+  initPuzzle();
+}
+
+function showScreen(screenId) {
+  document.querySelectorAll('.screen').forEach(screen => screen.classList.remove('active'));
+  document.getElementById(screenId).classList.add('active');
+}
+
+// Puzzle Game con imagen
+function initPuzzle() {
+  const grid = document.getElementById('puzzleGrid');
+  const positions = [
+    '0 0', '100px 0', '200px 0',
+    '0 100px', '100px 100px', '200px 100px',
+    '0 200px', '100px 200px', '200px 200px'
+  ];
+  let completed = 0;
+
+  positions.forEach((position, index) => {
+    const tile = document.createElement('div');
+    tile.className = 'puzzle-tile';
+    tile.style.backgroundImage = "url('https://servicio.foodservice.com.ar/app/bebe.jpeg')";
+    tile.style.backgroundPosition = position;
+    tile.onclick = () => {
+      tile.style.background = '#FF69B4';
+      completed++;
+      if (completed === positions.length) {
+        setTimeout(() => {
+          alert("¡Puzzle completado!");
+            showScreen('sequence');
+          initSequence();
+        }, 500);
+      }
+    };
+    grid.appendChild(tile);
+  });
+}
+
+// Sequence Game
+const colors = ['#FF69B4', '#87CEEB', '#FFD700', '#98FB98'];
+let gameSequence = [];
+let playerSequence = [];
+let sequenceLength = 4;
+
+function initSequence() {
+  gameSequence = Array.from({length: sequenceLength}, () => colors[Math.floor(Math.random() * colors.length)]);
+}
+
+function playSequence() {
+  const container = document.getElementById('sequenceContainer');
+  container.innerHTML = '';
+  document.getElementById('playSequenceBtn').disabled = true;
+  
+  gameSequence.forEach((color, index) => {
+    setTimeout(() => {
+      const btn = document.createElement('div');
+      btn.className = 'sequence-btn';
+      btn.style.background = color;
+      container.appendChild(btn);
+      
+      if (index === gameSequence.length - 1) {
+        setTimeout(() => {
+          container.innerHTML = '';
+          createPlayerButtons();
+        }, 1000);
+      }
+    }, index * 1000);
+  });
+}
+
+function createPlayerButtons() {
+  const container = document.getElementById('playerSequence');
+  container.innerHTML = '';
+  
+  colors.forEach(color => {
+    const btn = document.createElement('button');
+    btn.className = 'sequence-btn';
+    btn.style.background = color;
+    btn.onclick = () => playerClick(color);
+    container.appendChild(btn);
+  });
+}
+
+function playerClick(color) {
+  playerSequence.push(color);
+  if (playerSequence.length === gameSequence.length) {
+    if (playerSequence.every((color, index) => color === gameSequence[index])) {
+      setTimeout(() => {
+        showScreen('timing');
+        initTiming();
+      }, 500);
+    } else {
+      playerSequence = [];
+      alert('¡Intenta de nuevo!');
+      document.getElementById('playSequenceBtn').disabled = false;
+    }
+  }
+}
+
+// Timing Game
+let attempts = 0;
+const maxAttempts = 5;
+
+function initTiming() {
+  let counter = 3;
+  const timingCounter = document.getElementById('timingCounter');
+  
+  const interval = setInterval(() => {
+    counter -= 0.01;
+    timingCounter.textContent = counter.toFixed(2);
+    
+    if (counter <= 0) {
+      clearInterval(interval);
+      attempts++;
+      if (attempts >= maxAttempts) {
+        showQuestions();
+      } else {
+        alert('¡Muy tarde! Intenta de nuevo');
+        initTiming();
+      }
+    }
+  }, 10);
+  
+  document.getElementById('timingButton').onclick = () => {
+    clearInterval(interval);
+    if (counter > 0 && counter < 0.2) {
+      startFinalCountdown();
+    } else {
+      attempts++;
+      if (attempts >= maxAttempts) {
+        showQuestions();
+      } else {
+        alert('¡Intenta de nuevo!');
+        initTiming();
+      }
+    }
+  };
+}
+
+// Final Countdown
+function startFinalCountdown() {
+  showScreen('finalCountdown');
+  let counter = 10;
+  const finalCounter = document.getElementById('finalCounter');
+  
+  const countdown = setInterval(() => {
+    counter--;
+    finalCounter.textContent = counter;
+    
+    if (counter <= 0) {
+      clearInterval(countdown);
+      revealGender();
+    }
+  }, 1000);
+}
+
+// Questions
+const questions = [
+  "¿Estás realmente seguro/a de que quieres saber el género del bebé?",
+  "¿Completamente seguro/a?",
+  "¿Absolutamente seguro/a?",
+  "¿Definitivamente seguro/a?",
+  "¿Esta es tu última oportunidad, estás seguro/a?"
+];
+
+let currentQuestion = 0;
+
+function showQuestions() {
+  showScreen('questions');
+  displayCurrentQuestion();
+}
+
+function displayCurrentQuestion() {
+  const container = document.getElementById('questionContainer');
+  container.innerHTML = `
+    <h3>${questions[currentQuestion]}</h3>
+    <button onclick="answerQuestion(true)">Sí</button>
+    <button onclick="answerQuestion(false)">No</button>
+  `;
+}
+
+function answerQuestion(answer) {
+  if (!answer) {
+    alert('¡Debes estar seguro para continuar!');
+    return;
+  }
+  
+  currentQuestion++;
+  if (currentQuestion >= questions.length) {
+    revealGender();
+  } else {
+    displayCurrentQuestion();
+  }
+}
+
+// Gender Reveal
+function revealGender() {
+  showScreen('reveal');
+  createConfetti();
+  audio.play();
+}
+
+// Modify createConfetti for sky colors
+function createConfetti() {
+  const colors = ['#4FA7FF', '#87CEEB', '#B0E2FF', '#E0FFFF'];
+  for (let i = 0; i < 100; i++) {
+    const confetti = document.createElement('div');
+    confetti.className = 'confetti';
+    confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+    confetti.style.left = Math.random() * 100 + 'vw';
+    confetti.style.top = -10 + 'px';
+    confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+    document.body.appendChild(confetti);
+    
+    setTimeout(() => confetti.remove(), 5000);
+  }
+}
+</script>
+</body></html>
